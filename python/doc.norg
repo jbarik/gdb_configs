@@ -1,0 +1,92 @@
+* Command name: real-step
+
+  @document
+
+  Keeps on stepping till it reaches a mathworks-function.
+
+  This command uses step and finish, till it reaches a function whose name
+  doesn't match the following patterns:
+
+  ".*/mathworks/hub/3rdparty"
+  ".*/mathworks-hub/3rdparty"
+  ".*/3p/sources/.*",
+  ".*/gcc.*/libstdc.*",
+  ".*slsv_scoped_ptr\.hpp$"
+
+  While stepping in if we step into a frame whose name is not availble,
+  it executes finish, and continues stepping in.
+
+
+  Executing this command, prints the output of step and finish in the gdb-prompt. To
+  avoid it, I use the following gdb-function
+
+  define rs
+     | real-step | /home/jbarik/.config/gdb/swallow-inputs
+  end
+
+  /home/jbarik/.config/gdb/swallow-inputs swallows all the outputs of step and finish.
+
+  @end
+
+
+* Command name: continue-till-fcn </partial-case-insensitive-fcn-name/>
+
+  @document
+  When gdb control is on a particular line, execute this method and give
+  the name of the function(partial, case insensitive) which is on that line.
+  The command will use step and finish combination to continue execution,
+  till it reaches a frame whose name matches the given partial-case-insensitive
+  name.
+
+  e.g.
+
+  In the following code snippet, execution is stopped at line no 625.
+  'continue-till-fc notifythat'  will take the control to inside the
+  function 'SLGlue::notifyThatPortHasBeenAdded'
+
+  623│     int numPorts = SLGlue::getBlockNumPorts(block);
+  624│     for (int i = 0; i < numPorts; i++) {
+  625├───────> SLGlue::notifyThatPortHasBeenAdded(SLGlue::getBlockNthPort(block, i));
+  626│         FL_DIAG_ASSERT(SLGlue::getBlockNumPorts(block) == numPorts);
+  627│     }
+
+
+  To suppress the output, I use the following gdb-wraper-fcn:
+
+  define ctf
+     | continue-till-fcn $arg0 | /home/jbarik/.config/gdb/swallow-inputs
+  end
+
+  @end
+
+* Command name: print-with-partial-name </partial-case-insensitive-symbol-name/>
+
+  @document
+
+  Print symbols with partial-case-insensitive name.
+
+  Use this command to print a symbol using partial-case-insensitive-name. It prints
+  the first match. If 'this' pointer is found in the scope, it searches for possible
+  match among the members of this pointer.
+
+  In its current implementation, this command starts searching in the current scope, walks
+  upwards 10 levels of scopes till it finds a case insensitive partial match. e.g. If we
+  are inside a function which has 10+ levels of nested if-else, and control is at the
+  innermost if-scope, this command won't find a symbol present at the outer most scope
+  inside the function.
+  @end
+
+* Command name: load-vtble-lib </pointer-to-base-class/>
+
+  @document
+
+  Load the *.so that contains the vtable info for a pointer.
+
+  gdb setting "set print object on" prints the derived-class-name on printing a
+  base-class-pointer. "info vtbl" is also usefull to print the virtual table. This
+  is useful to examine if a pointer is still good or not. e.g. A deleted Gain block
+  pointer on printing will say it is a SLBlock*. However, gdb can't print the info
+  if the library containing the virtual table is not loaded. This command, loads the
+  library that contains the vtable.
+
+  @end

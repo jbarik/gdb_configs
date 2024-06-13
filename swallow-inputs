@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while read;
+do
+  true
+done < /dev/stdin
